@@ -5,9 +5,9 @@
 There is a plethora of CRON/queue scheduler modules for NodeJS, but none solved my specific use cases as cleanly as I
 hoped. Here are the alternatives I considered, along with their shortcomings:
 
-* **Celery** - The gold standard for task queueing and scheduling in other environments, but adds a heavy Python-stack
- dependency I wanted to avoid. Also, although there is a NodeJS module to interface with it, it's only for task queueing,
- not processing.
+* **Celery** - The gold standard for task queueing and scheduling in other environments, but adds heavy Python stack
+ and message broker dependencies I wanted to avoid. Also, although there is a NodeJS module to interface with it,
+ it's only for task queueing - you can't easily write task handlers in it.
 * **Kue** - Great job queue but limited recurring-schedule functionality. Kue also requires explicit queue and job
  definition, and I was looking for something a bit more ad-hoc.
 * **Bull** - Good job queue with a nice progress-indication feature, but no recurring-schedule support.
@@ -20,6 +20,7 @@ hoped. Here are the alternatives I considered, along with their shortcomings:
  ActionHero frameworks and got a lot of mileage out of it. The main problem I had was with dealing with failed jobs.
  Despite implementing the retry/remove failed task facilities, there were always edge cases where I had stuck or failed
  jobs that were difficult to recover.
+* **Node-Cron** - Good CRON-like scheduler, but no queueing support and lacks cluster management (locking) concepts.
 
 ## Crone Overview
 
@@ -35,7 +36,7 @@ Crone clients and workers connect using a common client library:
 ```js
 var Crone = require('crone'),
     crone = new Crone({
-        // The URL may be any valid node-redis connection URI: 
+        // The URL may be any valid ioredis connection URI: 
         redisUrl: 'redis://1.2.3.4:6379/1'
     });
 ```
@@ -52,7 +53,7 @@ crone.register({
 });
 ```
 
-Tasks can be very sophisticated:
+Tasks can have very sophisticated schedules:
 
 ```js
 crone.register({
@@ -66,16 +67,34 @@ crone.register({
 });
 ```
 
-Or enqueued manually:
+... or use CRON-style 'S M H DOM MO DOW' syntax for scheduling:
+
+```js
+crone.register({
+    name: 'myTask',
+    cron: '15 10 * * ? *',
+    run: function(params) {
+        return true;
+    }
+});
+```
+
+... or even be enqueued manually:
 
 ```js
 crone.run('myTask', { ... params });
 ```
 
-optionally with a 60-second delay:
+optionally with a delay before execution (ideal for debouncing, since Crone also provides duplicate-detection):
 
 ```js
 crone.run('myTask', { ... params }, { delay: 60000 });
+```
+
+or at a specific date/time in the future:
+
+```js
+crone.run('myTask', { ... params }, { at: new Date(Date.now() + 60000) });
 ```
 
 Scheduled tasks are de-duped by their names and schedules. They have no parameters unless called via `runTask`, although
@@ -189,7 +208,7 @@ listed below with their default values:
 ```js
 var Crone = require('crone'),
     crone = new Crone({
-        // The Redis connection URI. This may be any valid URI that node-redis accepts. Note that only one Redis
+        // The Redis connection URI. This may be any valid URI that ioredis accepts. Note that only one Redis
         // connection may be specified, but you can easily connect to a cluster via Redis Sentinel or Redis Cluster.
         redisUrl: 'redis://1.2.3.4:6379/1'
         
@@ -201,13 +220,7 @@ var Crone = require('crone'),
         
         // Scheduled jobs are locked by default by their name:schedule hashes for 5 minutes. Manually executed
         // tasks are locked by their name:params hashes, where params is serialized from the task's parameters. 
-        lockDuration: 300000,
-        
-        // By default, log entries are displayed on the Console, but a custom logging function (e.g. Winston) may
-        // be provided.
-        logger: function(event) {
-            console.log('Crone: ', event);
-        }
+        lockDuration: 300000
     });
 ```
 

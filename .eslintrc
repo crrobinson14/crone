@@ -1,0 +1,22 @@
+{
+    "parserOptions": {
+        "ecmaVersion": 5,
+        "sourceType": "module"
+    },
+    "env": {
+        "node": true
+    },
+    "globals": {
+        "describe": true,
+        "it": true,
+        "before": true,
+        "after": true,
+        "beforeEach": true,
+        "afterEach": true
+    },
+    "extends": "eslint:recommended",
+    "rules": {
+        "quotes": [2, "single", "avoid-escape"],
+        "no-console": 0
+    }
+}
