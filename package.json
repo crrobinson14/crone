@@ -1,0 +1,36 @@
+{
+  "name": "crone",
+  "version": "0.0.2",
+  "description": "Redis-backed task queue and scheduler for NodeJS",
+  "main": "index.js",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
+  "dependencies": {
+    "chai": "^3.5.0"
+  },
+  "devDependencies": {
+    "mocha": "^2.4.5"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crrobinson14/crone.git"
+  },
+  "keywords": [
+    "task",
+    "queue",
+    "schedule",
+    "scheduler",
+    "redis"
+  ],
+  "author": "Chad Robinson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/crrobinson14/crone/issues"
+  },
+  "homepage": "https://github.com/crrobinson14/crone#readme"
+}
