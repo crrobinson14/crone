@@ -31,13 +31,15 @@ excellent Later.js module, which allows very sophisticated schedules to be creat
 scheduling tasks with the same parameters will not create duplicate entries. This eliminates the need for a "master"
 scheduling node, because every worker can load or reload the scheduled task list when it starts.
 
+Crone is designed to be stable, reliable, and self-healing.
+
 Crone clients and workers connect using a common client library:
 
 ```js
 var Crone = require('crone'),
     crone = new Crone({
-        // The URL may be any valid ioredis connection URI: 
-        redisUrl: 'redis://1.2.3.4:6379/1'
+        // The config block may contain any valid ioredis options: 
+        redis: { host: '1.2.3.4', db: 1 }
     });
 ```
 
@@ -200,7 +202,7 @@ If a task processing node is configured to monitor more than one queue, the orde
 in which they will be handled. This means queue names themselves can be any value - it is not important to use
 the actual word "high".
 
-### Configuration Options
+## Configuration Options
 
 Crone provides a number of options that control its default behavior for all jobs within the connection object,
 listed below with their default values:
@@ -208,9 +210,9 @@ listed below with their default values:
 ```js
 var Crone = require('crone'),
     crone = new Crone({
-        // The Redis connection URI. This may be any valid URI that ioredis accepts. Note that only one Redis
+        // The Redis connection options. This may be any valid options block that ioredis accepts. Note that only one Redis
         // connection may be specified, but you can easily connect to a cluster via Redis Sentinel or Redis Cluster.
-        redisUrl: 'redis://1.2.3.4:6379/1'
+        redis: { host: '1.2.3.4', db: 1 }
         
         // By default, retry failed tasks immediately, then back off 5s at a time for each additional failure to a
         // maximum of 60s. All times specified in ms.
@@ -223,8 +225,18 @@ var Crone = require('crone'),
         lockDuration: 300000
     });
 ```
+## Implementation
 
-### Client API
+Crone uses Redis for three components:
+
+* Locking
+* Task queueing
+* Pub/Sub notification of result/error events
+
+Redis is a great coordination layer for queue-type operations. Crone starts by allocating a brief, unique node identifier
+using Dylan Greene's excellent [ShortID](https://github.com/dylang/shortid) library.
+
+## Client API
 
 The Crone client provides the following methods:
 
