@@ -13,6 +13,7 @@
     "ioredis": "^1.15.1",
     "later": "^1.2.0",
     "redislock": "^1.2.0",
+    "redlock": "^1.0.0",
     "shortid": "^2.2.4"
   },
   "devDependencies": {

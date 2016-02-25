@@ -74,7 +74,7 @@ crone.register({
 ```js
 crone.register({
     name: 'myTask',
-    cron: '15 10 * * ? *',
+    cron: '* 0/15 * * * *',
     run: function(params) {
         return true;
     }
